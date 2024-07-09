@@ -69,7 +69,7 @@ void loop() {
 
             case 3:
                 if((option - 1) < 0){
-                    option = 2;
+                    option = 3;
                 }
                 else{
                     option--;

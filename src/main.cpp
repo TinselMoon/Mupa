@@ -40,6 +40,8 @@ ServoController servo_2 = ServoController(14);
 
 TaskHandle_t Task1;
 
+SemaphoreHandle_t xMutex;
+
 void TaskLed(void *PvParameters);
 
 int readButton(void);
@@ -62,6 +64,8 @@ void setup() {
     pinMode(BUTTON_2, INPUT_PULLUP);
     pinMode(BUTTON_3, INPUT_PULLUP);
 
+    xMutex = xSemaphoreCreateMutex();
+
     xTaskCreatePinnedToCore(
                     TaskLed,   /* Task function. */
                     "Task2",     /* name of task. */
@@ -74,6 +78,7 @@ void setup() {
 
 void loop() {
     if((button_press = readButton()) && (button_press != last_button)){
+        while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
         switch (button_press){
             case 1:
                 if((option + 1) > 3){
@@ -97,6 +102,7 @@ void loop() {
                 }
                 break;
         }
+        xSemaphoreGive(xMutex);
     }
     last_button = button_press;
 }
@@ -105,11 +111,13 @@ void TaskLed(void *PvParameters){
 
   while (1)
   {
+    while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
     LED.print_color(colors[option]);
     if(lastOption != option){
         displayOptions();
         lastOption = option;
     }
+    xSemaphoreGive(xMutex);
   }
   
 }

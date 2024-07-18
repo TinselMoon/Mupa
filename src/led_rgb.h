@@ -23,6 +23,7 @@ public:
     void blink(const long time, int color);
 
     void latch(const long time, int color);
+    void print_color(int color);
 };
 
 
@@ -84,4 +85,9 @@ void led_rgb ::latch(const long time, int color){
         pixels.show();
   }
    
+}
+
+void led_rgb ::print_color(int color){
+  pixels.fill(color);
+  pixels.show();
 }

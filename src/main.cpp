@@ -2,6 +2,8 @@
 #include "ServoController.hpp"
 #include "led_rgb.h"
 
+#include <TFT_eSPI.h>
+#include <SPI.h>
 
 // Buttons
 #define BUTTON_1 33
@@ -14,9 +16,22 @@
 #define VERMELHO 16515843
 #define VERDE 63240
 #define AZUL 49911
-led_rgb LED ;
+
+led_rgb LED;
+
+// TFT Screen
+#define TFT_GREY 0x5AEB
+#define LOOP_PERIOD 35 // Display updates every 35 ms
+
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+#define FONT_SIZE 4
+
+TFT_eSPI tft = TFT_eSPI();
+
 
 int button_press = 0, last_button = 0, option = 0;
+int lastOption = 1;
 
 const int colors[] = {VERMELHO, VERDE, AZUL, AMARELO};
 
@@ -29,13 +44,19 @@ void TaskLed(void *PvParameters);
 
 int readButton(void);
 
-void actHand(int option);
+void actHand(void);
+
+void displayOptions(void);
 
 void setup() {
     servo_1.SetupServo();
     servo_2.SetupServo();
 
     LED.init();
+
+    tft.init();
+    tft.setRotation(3);
+    tft.fillScreen(TFT_WHITE);
 
     pinMode(BUTTON_1, INPUT_PULLUP);
     pinMode(BUTTON_2, INPUT_PULLUP);
@@ -64,7 +85,7 @@ void loop() {
                 break;
 
             case 2:
-                actHand(option);
+                actHand();
                 break;
 
             case 3:
@@ -84,34 +105,70 @@ void TaskLed(void *PvParameters){
 
   while (1)
   {
-    LED.latch(100,colors[option]);
+    LED.print_color(colors[option]);
+    if(lastOption != option){
+        displayOptions();
+        lastOption = option;
+    }
   }
   
 }
 
+void displayOptions(void){
+    tft.setTextColor(TFT_BLACK,TFT_WHITE);
+    switch (option){
+    case 0:
+        tft.drawCentreString("Mode 2", 240, 60, FONT_SIZE);
+        tft.drawCentreString("Mode 3", 80, 180, FONT_SIZE);
+        tft.drawCentreString("Mode 4", 240, 180, FONT_SIZE);
+        tft.setTextColor(TFT_WHITE,TFT_BLACK);
+        tft.drawCentreString("Mode 1", 80, 60, FONT_SIZE);
+        break;
+    case 1:
+        tft.drawCentreString("Mode 1", 80, 60, FONT_SIZE);
+        tft.drawCentreString("Mode 3", 80, 180, FONT_SIZE);
+        tft.drawCentreString("Mode 4", 240, 180, FONT_SIZE);
+        tft.setTextColor(TFT_WHITE,TFT_BLACK);
+        tft.drawCentreString("Mode 2", 240, 60, FONT_SIZE);
+        break;
+    case 2:
+        tft.drawCentreString("Mode 1", 80, 60, FONT_SIZE);
+        tft.drawCentreString("Mode 2", 240, 60, FONT_SIZE);
+        tft.drawCentreString("Mode 4", 240, 180, FONT_SIZE);
+        tft.setTextColor(TFT_WHITE,TFT_BLACK);
+        tft.drawCentreString("Mode 3", 80, 180, FONT_SIZE);
+        break;
+    case 3:
+        tft.drawCentreString("Mode 1", 80, 60, FONT_SIZE);
+        tft.drawCentreString("Mode 2", 240, 60, FONT_SIZE);
+        tft.drawCentreString("Mode 3", 80, 180, FONT_SIZE);
+        tft.setTextColor(TFT_WHITE,TFT_BLACK);
+        tft.drawCentreString("Mode 4", 240, 180, FONT_SIZE);
+        break;
+    }
+}
+
 // Função mover servos
-void actHand(int option){
-    // Move apenas servo 1 em 180 graus
-    if(option == 0){
-        servo_1.control.write(180);
-        delay(1000);
-    }
-    // Move apenas servo 2 em 180 graus
-    else if(option == 1){
-        servo_2.control.write(180);
-        delay(1000);
-    }
-    // Move os dois servos em 180 graus
-    else if (option == 2){
-        servo_1.control.write(180);
-        servo_2.control.write(180);
-        delay(1000);
-    }
-    // Reposiciona os dois servos na posição inicial
-    else{
-        servo_1.control.write(0);
-        servo_2.control.write(0);
-        delay(1000);
+void actHand(void){
+    switch(option) {
+        // Move apenas servo 1 em 180 graus
+        case 0:
+            servo_1.control.write(180);
+            break;
+        // Move apenas servo 2 em 180 graus
+        case 1:
+            servo_2.control.write(180);
+            break;
+        // Move os dois servos em 180 graus
+        case 2:
+            servo_1.control.write(180);
+            servo_2.control.write(180);
+            break;
+        // Reposiciona os dois servos na posição inicial
+        case 3:
+            servo_1.control.write(0);
+            servo_2.control.write(0);
+            break;
     }
 }
 

@@ -11,11 +11,16 @@
 #define BUTTON_3 26
 
 // Led
+// Codigo das cores são encontrados a partir da conversão do código hexadecimal para decimal
 #define PIN_LED 13
+#define NUM_COLORS 6
 #define AMARELO 16768256 
 #define VERMELHO 16515843
 #define VERDE 63240
 #define AZUL 49911
+#define MAGENTA 16711935
+#define CIANO 3407871
+#define LIMAO 13434777
 
 led_rgb LED;
 
@@ -29,18 +34,19 @@ led_rgb LED;
 
 TFT_eSPI tft = TFT_eSPI();
 
-
+#define MAX_STACK_FUNCS 7
+int funcs[MAX_STACK_FUNCS] = {0}, stack = 0;
 int button_press = 0, last_button = 0, option = 0;
 int lastOption = 1;
 
-const int colors[] = {VERMELHO, VERDE, AZUL, AMARELO};
+const int colors[] = {VERMELHO, VERDE, AZUL, AMARELO, MAGENTA, CIANO, LIMAO};
 
 ServoController servo_1 = ServoController(27);
 ServoController servo_2 = ServoController(14);
 
 TaskHandle_t Task1;
 
-SemaphoreHandle_t xMutex;
+//SemaphoreHandle_t xMutex;
 
 void TaskLed(void *PvParameters);
 
@@ -50,7 +56,10 @@ void actHand(void);
 
 void displayOptions(void);
 
+void execStack(void);
+
 void setup() {
+    //Serial.begin(115200);
     servo_1.SetupServo();
     servo_2.SetupServo();
 
@@ -64,7 +73,7 @@ void setup() {
     pinMode(BUTTON_2, INPUT_PULLUP);
     pinMode(BUTTON_3, INPUT_PULLUP);
 
-    xMutex = xSemaphoreCreateMutex();
+    //xMutex = xSemaphoreCreateMutex();
 
     xTaskCreatePinnedToCore(
                     TaskLed,   /* Task function. */
@@ -78,10 +87,10 @@ void setup() {
 
 void loop() {
     if((button_press = readButton()) && (button_press != last_button)){
-        while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
+        //while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
         switch (button_press){
             case 1:
-                if((option + 1) > 3){
+                if((option + 1) > NUM_COLORS){
                     option = 0;
                 }
                 else{
@@ -95,14 +104,14 @@ void loop() {
 
             case 3:
                 if((option - 1) < 0){
-                    option = 3;
+                    option = NUM_COLORS;
                 }
                 else{
                     option--;
                 }
                 break;
         }
-        xSemaphoreGive(xMutex);
+        //xSemaphoreGive(xMutex);
     }
     last_button = button_press;
 }
@@ -111,13 +120,13 @@ void TaskLed(void *PvParameters){
 
   while (1)
   {
-    while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
+    //while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
     LED.print_color(colors[option]);
     if(lastOption != option){
         displayOptions();
         lastOption = option;
     }
-    xSemaphoreGive(xMutex);
+    //xSemaphoreGive(xMutex);
   }
   
 }
@@ -156,26 +165,70 @@ void displayOptions(void){
     }
 }
 
+void execStack(void){
+    int i;
+    for(i = 0; i < stack; i++){
+        switch (funcs[i]){
+            case 1:
+                servo_1.control.write(180);
+                delay(1000);
+                break;
+            case 2:
+                servo_2.control.write(180);
+                delay(1000);
+                break;
+            case 3:
+                servo_1.control.write(0);
+                delay(1000);
+                break;
+            case 4:
+                servo_2.control.write(0);
+                delay(1000);
+                break;
+            case 5:
+                delay(1000);
+                break;
+        }
+    }
+}
+
 // Função mover servos
 void actHand(void){
-    switch(option) {
-        // Move apenas servo 1 em 180 graus
-        case 0:
-            servo_1.control.write(180);
+    if(stack+1 < MAX_STACK_FUNCS){
+        switch(option) {
+            // Move apenas servo 1 em 180 graus
+            case 0:
+                funcs[stack++] = 1;
+                //servo_2.control.write(180);
+                break;
+            // Move apenas servo 2 em 180 graus
+            case 1:
+                funcs[stack++] = 2;
+                //servo_2.control.write(0);
+                break;
+            // Move os dois servos em 180 graus
+            case 2:
+                funcs[stack++] = 3;
+                break;
+            // Reposiciona os dois servos na posição inicial
+            case 3:
+                funcs[stack++] = 4;
+                break;
+
+            case 4:
+                funcs[stack++] = 5;
+                break;
+        }
+    }
+    switch (option){
+        case 5:
+            if(stack > 0){
+                --stack = 0;
+            }
             break;
-        // Move apenas servo 2 em 180 graus
-        case 1:
-            servo_2.control.write(180);
-            break;
-        // Move os dois servos em 180 graus
-        case 2:
-            servo_1.control.write(180);
-            servo_2.control.write(180);
-            break;
-        // Reposiciona os dois servos na posição inicial
-        case 3:
-            servo_1.control.write(0);
-            servo_2.control.write(0);
+        case 6:
+            //executa as funções da stack
+            execStack();
             break;
     }
 }

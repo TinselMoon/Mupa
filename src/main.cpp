@@ -128,15 +128,8 @@ void TaskLed(void *PvParameters){
     /*if(lastOption != option){
         displayOptions();
         lastOption = option;
-    }*/
-    //xSemaphoreGive(xMutex);
-    if(millis() - tempo > 5000){
-        tempo = millis();
-        Serial.printf("Itens na stack: \n");
-        for(int i = 0; i < stack; i++){
-            Serial.println(funcs[i]);
-        }
     }
+    //xSemaphoreGive(xMutex);*/
   }
   
 }
@@ -204,42 +197,22 @@ void execStack(void){
 
 // Função mover servos
 void actHand(void){
-    if(stack+1 < MAX_STACK_FUNCS){
-        switch(option) {
-            // Move apenas servo 1 em 180 graus
-            case 0:
-                funcs[stack++] = 1;
-                //servo_2.control.write(180);
+    if(stack+1 < MAX_STACK_FUNCS && option <= 4){
+        funcs[stack++] = option+1;
+    }
+    else{
+        switch (option){
+            case 5:
+                // Remove ultimo item da stack
+                if(stack > 0){
+                    stack--;
+                }
                 break;
-            // Move apenas servo 2 em 180 graus
-            case 1:
-                funcs[stack++] = 2;
-                //servo_2.control.write(0);
-                break;
-            // Move os dois servos em 180 graus
-            case 2:
-                funcs[stack++] = 3;
-                break;
-            // Reposiciona os dois servos na posição inicial
-            case 3:
-                funcs[stack++] = 4;
-                break;
-
-            case 4:
-                funcs[stack++] = 5;
+            case 6:
+                //executa as funções da stack
+                execStack();
                 break;
         }
-    }
-    switch (option){
-        case 5:
-            if(stack > 0){
-                stack--;
-            }
-            break;
-        case 6:
-            //executa as funções da stack
-            execStack();
-            break;
     }
 }
 

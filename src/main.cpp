@@ -134,7 +134,8 @@ void TaskLed(void *PvParameters){
   
 }
 
-void displayOptions(void){
+// Teste da tela
+/*void displayOptions(void){
     tft.setTextColor(TFT_BLACK,TFT_WHITE);
     switch (option){
     case 0:
@@ -166,7 +167,7 @@ void displayOptions(void){
         tft.drawCentreString("Mode 4", 240, 180, FONT_SIZE);
         break;
     }
-}
+}*/
 
 void execStack(void){
     int i;

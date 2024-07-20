@@ -34,8 +34,11 @@ led_rgb LED;
 
 TFT_eSPI tft = TFT_eSPI();
 
+// Functions stack
 #define MAX_STACK_FUNCS 7
 int funcs[MAX_STACK_FUNCS] = {0}, stack = 0;
+
+// Button
 int button_press = 0, last_button = 0, option = 0;
 int lastOption = 1;
 
@@ -59,7 +62,7 @@ void displayOptions(void);
 void execStack(void);
 
 void setup() {
-    //Serial.begin(115200);
+    Serial.begin(115200);
     servo_1.SetupServo();
     servo_2.SetupServo();
 
@@ -117,16 +120,23 @@ void loop() {
 }
 
 void TaskLed(void *PvParameters){
-
+    int tempo = millis();
   while (1)
   {
     //while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
     LED.print_color(colors[option]);
-    if(lastOption != option){
+    /*if(lastOption != option){
         displayOptions();
         lastOption = option;
-    }
+    }*/
     //xSemaphoreGive(xMutex);
+    if(millis() - tempo > 5000){
+        tempo = millis();
+        Serial.printf("Itens na stack: \n");
+        for(int i = 0; i < stack; i++){
+            Serial.println(funcs[i]);
+        }
+    }
   }
   
 }
@@ -223,7 +233,7 @@ void actHand(void){
     switch (option){
         case 5:
             if(stack > 0){
-                --stack = 0;
+                stack--;
             }
             break;
         case 6:

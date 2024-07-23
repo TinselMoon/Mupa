@@ -6,8 +6,8 @@
 #include <SPI.h>
 
 // Buttons
-#define BUTTON_1 33
-#define BUTTON_2 25
+#define BUTTON_1 25 //33
+#define BUTTON_2 33 //25
 #define BUTTON_3 26
 
 // Led

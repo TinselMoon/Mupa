@@ -13,14 +13,23 @@
 // Led
 // Codigo das cores são encontrados a partir da conversão do código hexadecimal para decimal
 #define PIN_LED 13
-#define NUM_COLORS 6
+#define NUM_COLORS 7
 #define AMARELO 16768256 
 #define VERMELHO 16515843
 #define VERDE 63240
 #define AZUL 49911
 #define MAGENTA 16711935
 #define CIANO 3407871
+#define LARANJA 16093234
 #define LIMAO 13434777
+
+// Movimento
+#define LIM_SUP_DEDAO 180
+#define LIM_INF_DEDAO 0
+#define LIM_SUP_DEDOS 180
+#define LIM_INF_DEDOS 0
+
+#define T_ESPERA 1000
 
 led_rgb LED;
 
@@ -35,14 +44,14 @@ led_rgb LED;
 TFT_eSPI tft = TFT_eSPI();
 
 // Functions stack
-#define MAX_STACK_FUNCS 7
+#define MAX_STACK_FUNCS 6
 int funcs[MAX_STACK_FUNCS] = {0}, stack = 0;
 
 // Button
 int button_press = 0, last_button = 0, option = 0;
 int lastOption = 1;
 
-const int colors[] = {VERMELHO, VERDE, AZUL, AMARELO, MAGENTA, CIANO, LIMAO};
+const int colors[] = {VERMELHO, VERDE, AZUL, AMARELO, MAGENTA, CIANO, LARANJA, LIMAO};
 
 ServoController servo_1 = ServoController(27);
 ServoController servo_2 = ServoController(14);
@@ -173,24 +182,31 @@ void execStack(void){
     int i;
     for(i = 0; i < stack; i++){
         switch (funcs[i]){
+            //Func abrir mao
             case 1:
-                servo_1.control.write(180);
-                delay(1000);
+                servo_1.control.write(LIM_SUP_DEDAO);
+                servo_2.control.write(LIM_SUP_DEDOS);
+                delay(500);
                 break;
+            //Func fecha mao
             case 2:
-                servo_2.control.write(180);
-                delay(1000);
+                servo_1.control.write(LIM_INF_DEDAO);
+                servo_2.control.write(LIM_INF_DEDOS);
+                delay(500);
                 break;
+            //Func abrir dedao
             case 3:
-                servo_1.control.write(0);
-                delay(1000);
+                servo_2.control.write(LIM_SUP_DEDOS);
+                delay(500);
                 break;
+            //Func fechar dedao
             case 4:
-                servo_2.control.write(0);
-                delay(1000);
+                servo_2.control.write(LIM_INF_DEDOS);
+                delay(500);
                 break;
+            //Func espera
             case 5:
-                delay(1000);
+                delay(T_ESPERA);
                 break;
         }
     }
@@ -210,6 +226,10 @@ void actHand(void){
                 }
                 break;
             case 6:
+                //Limpa as funções da stack
+                stack = 0;
+                break;
+            case 7:
                 //executa as funções da stack
                 execStack();
                 break;

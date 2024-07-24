@@ -6,8 +6,8 @@
 #include <SPI.h>
 
 // Buttons
-#define BUTTON_1 25 //33
-#define BUTTON_2 33 //25
+#define BUTTON_1 33
+#define BUTTON_2 25
 #define BUTTON_3 26
 
 // Led
@@ -28,6 +28,7 @@
 #define LIM_INF_DEDAO 0
 #define LIM_SUP_DEDOS 180
 #define LIM_INF_DEDOS 0
+#define TIME_SERVOS 1000
 
 #define T_ESPERA 1000
 
@@ -129,7 +130,6 @@ void loop() {
 }
 
 void TaskLed(void *PvParameters){
-    int tempo = millis();
   while (1)
   {
     //while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
@@ -144,7 +144,7 @@ void TaskLed(void *PvParameters){
 }
 
 // Teste da tela
-void displayOptions(void){
+/*void displayOptions(void){
     tft.setTextColor(TFT_BLACK,TFT_WHITE);
     switch (option){
     case 0:
@@ -176,7 +176,7 @@ void displayOptions(void){
         tft.drawCentreString("Mode 4", 240, 180, FONT_SIZE);
         break;
     }
-}
+}*/
 
 void execStack(void){
     int i;
@@ -186,23 +186,23 @@ void execStack(void){
             case 1:
                 servo_1.control.write(LIM_SUP_DEDAO);
                 servo_2.control.write(LIM_SUP_DEDOS);
-                delay(500);
+                delay(TIME_SERVOS);
                 break;
             //Func fecha mao
             case 2:
                 servo_1.control.write(LIM_INF_DEDAO);
                 servo_2.control.write(LIM_INF_DEDOS);
-                delay(500);
+                delay(TIME_SERVOS);
                 break;
             //Func abrir dedao
             case 3:
-                servo_2.control.write(LIM_SUP_DEDOS);
-                delay(500);
+                servo_2.control.write(LIM_SUP_DEDAO);
+                delay(TIME_SERVOS);
                 break;
             //Func fechar dedao
             case 4:
-                servo_2.control.write(LIM_INF_DEDOS);
-                delay(500);
+                servo_2.control.write(LIM_INF_DEDAO);
+                delay(TIME_SERVOS);
                 break;
             //Func espera
             case 5:

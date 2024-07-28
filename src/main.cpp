@@ -118,12 +118,7 @@ void setup() {
 }
 
 void loop() {
-    funcao.draw_funcoes(funcoes, index_, stack);
-    if((button_press = readButton()) && (button_press != last_button)){
-        funcao.track_position(index_, button_press);
-        funcao.select(index_, button_press);
-    }
-    last_button = button_press;
+    
     /*if((button_press = readButton()) && (button_press != last_button)){
         //while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
         switch (button_press){

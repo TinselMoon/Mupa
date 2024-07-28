@@ -1,14 +1,15 @@
 #include <Arduino.h>
 #include "ServoController.hpp"
 #include "led_rgb.h"
+#include "screenController.h"
 
 #include <TFT_eSPI.h>
 #include <SPI.h>
 
 // Buttons
-#define BUTTON_1 33
+/*#define BUTTON_1 33
 #define BUTTON_2 25
-#define BUTTON_3 26
+#define BUTTON_3 26*/
 
 // Led
 // Codigo das cores são encontrados a partir da conversão do código hexadecimal para decimal
@@ -24,39 +25,46 @@
 #define LIMAO 13434777
 
 // Movimento
-#define LIM_SUP_DEDAO 180
+/*#define LIM_SUP_DEDAO 180
 #define LIM_INF_DEDAO 0
 #define LIM_SUP_DEDOS 180
 #define LIM_INF_DEDOS 0
 #define TIME_SERVOS 1000
 
-#define T_ESPERA 1000
+#define T_ESPERA 1000*/
 
 led_rgb LED;
 
-// TFT Screen
+/*// TFT Screen
 #define TFT_GREY 0x5AEB
 #define LOOP_PERIOD 35 // Display updates every 35 ms
 
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
-#define FONT_SIZE 4
+#define FONT_SIZE 4*/
 
 TFT_eSPI tft = TFT_eSPI();
+TFT_eSprite funcoes = TFT_eSprite(&tft);
+TFT_eSprite stack = TFT_eSprite(&tft);
+
+int index_ = 0;
+
+Funcoes funcao(index_);
+
 
 // Functions stack
-#define MAX_STACK_FUNCS 6
-int funcs[MAX_STACK_FUNCS] = {0}, stack = 0;
+//#define MAX_STACK_FUNCS 6
+//int funcs[MAX_STACK_FUNCS] = {0}, stack = 0;
 
 // Button
-int button_press = 0, last_button = 0, option = 0;
+int button_press = 0, last_button = 1, option = 0;
 int lastOption = 1;
 
 const int colors[] = {VERMELHO, VERDE, AZUL, AMARELO, MAGENTA, CIANO, LARANJA, LIMAO};
 
-ServoController servo_1 = ServoController(27);
+/*ServoController servo_1 = ServoController(27);
 ServoController servo_2 = ServoController(14);
-
+*/
 TaskHandle_t Task1;
 
 //SemaphoreHandle_t xMutex;
@@ -65,11 +73,11 @@ void TaskLed(void *PvParameters);
 
 int readButton(void);
 
-void actHand(void);
+/*void actHand(void);
 
 void displayOptions(void);
 
-void execStack(void);
+void execStack(void);*/
 
 void setup() {
     Serial.begin(115200);
@@ -82,9 +90,19 @@ void setup() {
     tft.setRotation(3);
     tft.fillScreen(TFT_WHITE);
 
-    pinMode(BUTTON_1, INPUT_PULLUP);
+    funcoes.setColorDepth(8);
+    funcoes.createSprite(200, 240);
+
+    stack.setColorDepth(8);
+    stack.createSprite(70, 240);  
+    funcao.init_screen(tft);
+
+    /*pinMode(BUTTON_1, INPUT_PULLUP);
     pinMode(BUTTON_2, INPUT_PULLUP);
-    pinMode(BUTTON_3, INPUT_PULLUP);
+    pinMode(BUTTON_3, INPUT_PULLUP);*/
+    pinMode(botao::button_1, INPUT_PULLUP);
+    pinMode(botao::button_2, INPUT_PULLUP);
+    pinMode(botao::button_3, INPUT_PULLUP);
 
     //xMutex = xSemaphoreCreateMutex();
 
@@ -96,10 +114,17 @@ void setup() {
                     1,           /* priority of the task */
                     &Task1,      /* Task handle to keep track of created task */
                     0);          /* pin task to core 0 */
+    
 }
 
 void loop() {
+    funcao.draw_funcoes(funcoes, index_, stack);
     if((button_press = readButton()) && (button_press != last_button)){
+        funcao.track_position(index_, button_press);
+        funcao.select(index_, button_press);
+    }
+    last_button = button_press;
+    /*if((button_press = readButton()) && (button_press != last_button)){
         //while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
         switch (button_press){
             case 1:
@@ -126,25 +151,23 @@ void loop() {
         }
         //xSemaphoreGive(xMutex);
     }
-    last_button = button_press;
+    last_button = button_press;*/
 }
 
 void TaskLed(void *PvParameters){
   while (1)
   {
     //while(xSemaphoreTake(xMutex, portMAX_DELAY) != pdTRUE);
-    LED.print_color(colors[option]);
-    if(lastOption != option){
+    LED.print_color(colors[index_]);
+    /*if(lastOption != option){
         displayOptions();
         lastOption = option;
-    }
-    //xSemaphoreGive(xMutex);*/
+    }*/
+    //xSemaphoreGive(xMutex);
   }
-  
 }
-
-// Teste da tela
-/*void displayOptions(void){
+/*// Teste da tela
+void displayOptions(void){
     tft.setTextColor(TFT_BLACK,TFT_WHITE);
     switch (option){
     case 0:
@@ -178,7 +201,7 @@ void TaskLed(void *PvParameters){
     }
 }*/
 
-void execStack(void){
+/*void execStack(void){
     int i;
     for(i = 0; i < stack; i++){
         switch (funcs[i]){
@@ -210,10 +233,10 @@ void execStack(void){
                 break;
         }
     }
-}
+}*/
 
 // Função mover servos
-void actHand(void){
+/*void actHand(void){
     if(stack+1 < MAX_STACK_FUNCS && option <= 4){
         funcs[stack++] = option+1;
     }
@@ -235,26 +258,26 @@ void actHand(void){
                 break;
         }
     }
-}
+}*/
 
 // Lê se um botão for pressionado
 int readButton(void){
     int button_high = 0;
     int tempo = 0;
-    if(!digitalRead(BUTTON_1) && !button_high){
+    if(!digitalRead(botao::button_1) && !button_high){
         tempo = millis();
         button_high = 1;
     }
-    if(!digitalRead(BUTTON_2) && !button_high){
+    if(!digitalRead(botao::button_2) && !button_high){
         tempo = millis();
         button_high = 2;
     }
-    if(!digitalRead(BUTTON_3) && !button_high){
+    if(!digitalRead(botao::button_3) && !button_high){
         tempo = millis();
         button_high = 3;
     }
     while(button_high && (millis() - tempo) < 50){
-        if(digitalRead(BUTTON_1) && digitalRead(BUTTON_2) && digitalRead(BUTTON_3)){
+        if(digitalRead(botao::button_1) && digitalRead(botao::button_2) && digitalRead(botao::button_3)){
             return 0;
         }
     }
